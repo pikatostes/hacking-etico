@@ -1,4 +1,5 @@
 # Como pasar un archivo .ova a .qcow2
+
 Como el formato .ova es simplemente un archivo comprimido, puedes extraer los archivos contenidos usando tar
 Extrae el archivo .ova:
 
