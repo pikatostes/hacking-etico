@@ -1,94 +1,55 @@
-# Práctica 02.- 🛠 Instalación del Laboratorio con KVM/QEMU
-Este procedimiento permitirá montar un laboratorio con Kali Linux como máquina de ataque y Metasploitable2 como máquina víctima, utilizando KVM/QEMU y una red NAT para facilitar la comunicación entre ambas.
-
-## 1️⃣ Instalación de KVM/QEMU y virt-manager
-En sistemas Debian/Ubuntu, instalar los paquetes necesarios:
-
-```bash
+# Práctica 02 - Instalación del Laboratorio con KVM/QEMU
+## 1. Instalación de paquetes necesarios
+- Actualizamos los repositorios e instalamos los siguientes paquetes:
+```zsh
 sudo apt update
-sudo apt install -y qemu-kvm libvirt-daemon libvirt-daemon-system libvirt-clients bridge-utils virt-manager
+sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
 ```
-Habilitar y arrancar el servicio de libvirt:
+De esta manera nos aseguramos de que el sistema tenga todo lo necesario para crear y gestionar máquinas virtuales.
 
-```bash
-sudo systemctl enable libvirtd
-sudo systemctl start libvirtd
+## 2. Verificación del soporte de virtualización
+- Comprobamos primero que nuestra CPU soporta virtualización:
+```zsh
+egrep -c '(vmx|svm)' /proc/cpuinfo
 ```
-Añadir el usuario al grupo libvirt para evitar problemas de permisos:
+Si nos aparece un número mayor a 0, nuestra CPU soporta virtualización.
 
-```bash
-sudo usermod -aG libvirt $USER
+## 3. Configuración de red
+- Creamos un puente de red para que las VMs accedan a la red externa
+- Editamos el archivo de configuración de red:
+```zsh
+sudo nano /etc/netplan/01-netcfg.yaml
 ```
-👉 Cerrar sesión y volver a iniciarla para que los cambios surtan efecto.
-
-## 2️⃣ Creación de la Red NAT (10.0.2.0/24)
-### 📌 Método 1: Usando virt-manager (Interfaz gráfica)
-1. Abrir virt-manager.
-2. Ir a Editar > Detalles de la conexión > Redes virtuales.
-3. Crear una nueva red virtual:
-   - Nombre: red-nat
-   - Dirección: 10.0.2.0/24
-   - Habilitar DHCP (opcional).
-   - Configurar el modo de red como NAT.
-
-    Guardar y activar la red.
-### 📌 Método 2: Usando virsh (Línea de comandos)
-Crear un archivo de configuración XML (red-nat.xml):
-```xml
-<network>
-  <name>red-nat</name>
-  <forward mode='nat'/>
-  <ip address='10.0.2.1' netmask='255.255.255.0'>
-    <dhcp>
-      <range start='10.0.2.2' end='10.0.2.254'/>
-    </dhcp>
-  </ip>
-</network>
+- Configuramos el puente con el siguiente ejemplo:
+```yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s3:
+      dhcp4: no
+  bridges:
+    br0:
+      interfaces: [enp0s3]
+      dhcp4: yes
 ```
-Aplicar la configuración:
-```bash
-virsh net-define red-nat.xml
-virsh net-start red-nat
-virsh net-autostart red-nat
+- Aplicamos la configuración:
+```zsh
+sudo netplan apply
 ```
-### 3️⃣ Creación de la Máquina Virtual Kali Linux
-1. Descargar la ISO de Kali Linux
-2. Descargar la última versión de Kali Linux desde el sitio oficial.
-
-3. Crear la máquina virtual en virt-manager
-4. Abrir virt-manager y hacer clic en "Crear una nueva máquina virtual".
-5. Seleccionar "Instalar desde una imagen ISO" y elegir la ISO de Kali Linux.
-6. Configurar:
-   - CPU: 2 núcleos (mínimo).
-   - RAM: 4 GB (recomendado).
-   - Disco: 20 GB en formato qcow2.
-   - Configurar la red seleccionando red-nat.
-7. Iniciar la instalación de Kali Linux.
-### 4️⃣ Creación de la Máquina Virtual Metasploitable2
-1. Descargar Metasploitable2
-2. Descargar la imagen de Metasploitable2 desde Rapid7.
-
-3. Convertir la imagen VMDK a qcow2
-4. Normalmente, Metasploitable2 viene en formato VMDK, que debemos convertir a qcow2:
-
-```bash
-qemu-img convert -f vmdk -O qcow2 Metasploitable.vmdk Metasploitable.qcow2
+## 4. Creación de una máquina virtual
+- Creamos una imagen de disco para la VM:
+```zsh
+qemu-img create -f qcow2 /var/lib/libvirt/images/mi_vm.qcow2 20G
 ```
-5. Crear la máquina virtual en virt-manager
-6. Abrir virt-manager y hacer clic en "Crear una nueva máquina virtual".
-7. Seleccionar "Importar imagen de disco existente".
-8. Elegir Metasploitable.qcow2.
-9. Configurar:
-   - CPU: 1 núcleo.
-   - RAM: 512 MB (mínimo).
-   - Disco: Se usará Metasploitable.qcow2.
-   - Configurar la red seleccionando red-nat.
-10. Finalizar la configuración e iniciar la máquina.
-
-✅ Verificación de Conectividad
-Para asegurarnos de que ambas máquinas pueden comunicarse dentro de la red red-nat, ejecutamos en Kali Linux:
-
-```bash
-ping 10.0.2.X  # (Reemplazar X con la IP de Metasploitable2)
+- Iniciamos el asistente de creación de VMs con virt-manager o con el comando:
+```zsh
+virt-install --name mi_vm --ram 2048 --vcpus 2 --disk path=/var/lib/libvirt/images/mi_vm.qcow2,format=qcow2 --os-type linux --os-variant ubuntu20.04 --network bridge=br0 --graphics spice --cdrom /path/to/ubuntu.iso
 ```
-Si la conectividad es exitosa, significa que la red está bien configurada y el laboratorio está listo para pruebas de explotación.
+Exactamente, este comando configura una VM con 2 GB de RAM, 2 CPUs, y un puente de red.
+
+## 5. Prueba del laboratorio¶
+- Nos aseguramos de que la VM se haya creado correctamente y que puede acceder a la red externa haciendo un ping:
+```zsh
+ping google.com
+```

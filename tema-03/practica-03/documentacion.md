@@ -1,76 +1,36 @@
-# Práctica 03.- 🛠 Fase de Escaneo con Nmap en Kali Linux
-Se realizarán tres tipos de escaneo:
-
-- Escaneo de red 🔍 (descubrir hosts activos).
-- Escaneo de servicios 🔧 (detectar puertos abiertos y servicios en ejecución).
-- Escaneo de vulnerabilidades 🚨 (detectar posibles fallos de seguridad).
-## 1️⃣ Identificar la IP de la Máquina Víctima
-Antes de comenzar los escaneos, necesitamos conocer la IP de la máquina Metasploitable2. Para ello, en Kali Linux ejecuta:
-
-```bash
-ip a
+# Práctica 03 - Fase de Escaneo
+## 1. Escaneo de red para identificar dispositivos activos
+Utilizamos nmap para descubrir dispositivos en la red local:
+```zsh
+nmap -sn 192.168.1.0/24
 ```
-Y en Metasploitable2, inicia sesión con msfadmin/msfadmin y usa:
 
-```bash
-ip a
+## 2. Escaneo de puertos abiertos en un dispositivo específico
+Escaneamos los puertos abiertos en un dispositivo identificado:
+```zsh
+nmap -sS 192.168.1.10
 ```
-Anota la IP (ejemplo: 10.0.2.15).
 
-## 2️⃣ Escaneo de Red (Descubrir hosts activos)
-Si no conocemos la IP exacta de Metasploitable2, podemos descubrir los dispositivos activos en la red:
-
-```bash
-nmap -sn 10.0.2.0/24
+## 3. Identificación de servicios en los puertos abiertos
+Descubrimos qué servicios están corriendo y sus versiones:
+```zsh
+nmap -sV -p 22,80,443 192.168.1.10
 ```
-Esto hará un ping sweep sobre toda la red 10.0.2.0/24, mostrando qué máquinas están activas.
 
-## 3️⃣ Escaneo de Servicios (Puertos Abiertos y Servicios)
-Una vez identificada la IP de la máquina víctima, realizamos un escaneo de puertos abiertos y servicios en ejecución:
-
-```bash
-nmap -sS -sV -O -p- 10.0.2.15
+## 4. Escaneo de vulnerabilidades
+Realizamos un escaneo para detectar posibles vulnerabilidades:
+```zsh
+nmap --script vuln 192.168.1.10
 ```
-Explicación:
 
-- sS → Escaneo TCP SYN (sigiloso).
-- sV → Detección de versiones de servicios.
-- O → Intento de detección de sistema operativo.
-- p- → Escanea todos los puertos (1-65535).
-Si queremos un escaneo más rápido enfocándonos en los 1000 puertos más comunes:
-
-```bash
-nmap -sS -sV -O 10.0.2.15
+## 5. Generación de un informe
+Guardamos los resultados del escaneo en un archivo para referencia futura:
+```zsh
+nmap -sV 192.168.1.10 -oN escaneo_resultados.txt
 ```
-## 4️⃣ Instalación de Vulscan (Para Escaneo de Vulnerabilidades)
-Vulscan es un script para Nmap que permite correlacionar los resultados con bases de datos de vulnerabilidades.
 
-### 1️⃣ Clonar el repositorio de Vulscan:
-
-```bash
-cd /usr/share/nmap/scripts/
-sudo git clone https://github.com/scipag/vulscan.git
+## 6. Escaneo avanzado (opcional)
+Incluímos opciones avanzadas como la detección de sistema operativo:
+```zsh
+nmap -O 192.168.1.10
 ```
-### 2️⃣ Actualizar la base de datos de vulnerabilidades:
-
-```bash
-cd vulscan
-sudo ./update.sh
-```
-## 5️⃣ Escaneo de Vulnerabilidades con Vulscan
-Ahora que tenemos Vulscan instalado, ejecutamos:
-
-```bash
-nmap -sS -sV --script vulscan/vulscan.nse 10.0.2.15
-```
-Si queremos usar una base de datos específica, por ejemplo Exploit-DB:
-
-```bash
-nmap -sS -sV --script vulscan/vulscan.nse --script-args vulscan.db=exploitdb.csv 10.0.2.15
-```
-✅ Interpretación de Resultados
-Después de los escaneos:
-
-- Escaneo de red nos dice qué máquinas están activas en la red.
-- Escaneo de servicios nos muestra qué puertos están abiertos y qué servicios corren en ellos.
-- Escaneo de vulnerabilidades nos ayuda a identificar posibles exploits.

@@ -1,34 +1,22 @@
-# Práctica 01.-Fase de reconocimiento
-## 🔍 1️⃣ Buscar todos los archivos PDF en GitHub
-```plaintext
+# Práctica 01 - Fase de Reconocimiento¶
+## Ejercicio 1 - Buscar todos los archivos PDF del sitio github.com.
+El siguiente comando depura los resultados en Google para que aparezcan únicamente archivos `.pdf` alojados en `https://github.com`.
+```zsh
 site:github.com filetype:pdf
 ```
-📌 Explicación:
 
-- `site:github.com` → Filtra solo resultados de GitHub.
-- `filetype:pdf` → Busca archivos con la extensión .pdf.
-## 🔍 2️⃣ Buscar cualquier URL que contenga la cadena intranet/login.php
-```plaintext
-inurl:intranet/login.php
+## Ejercicio 2 - Buscar cualquier URL que contenga la cadena intranet/login.php.
+Con el siguiente comando buscamos URLs que contengan la cadena exacta indicada. Eficaz para encontrar rutas concretas en aplicaciones web.
+```zsh
+inurl:"intranet/login.php"
 ```
-📌 Explicación:
 
-- `inurl:intranet/login.php` → Busca páginas con "intranet/login.php" en la URL.
-
-## 🔍 3️⃣ Buscar directorios con la carpeta uploads expuesta
-```plaintext
-intitle:"index of" "uploads"
+## Ejercicio 3 - Buscar un listado de directorios con la carpeta uploads expuesta.
+El siguiente comando busca páginas de índice (listados de directorios) a la vez que filtra aquellas con el subdirectorio `/uploads`.
+```zsh
+intitle:"index of" inurl:"/uploads"
 ```
-📌 Explicación:
 
-- `intitle:"index of"` → Busca listados de directorios abiertos.
-- `"uploads"` → Filtra resultados con la carpeta "uploads".
-
-## 🔍 4️⃣ Buscar documentos Word (.docx) con información sensible
-```plaintext
-filetype:docx "confidential" OR "password" OR "internal use only"
-```
-📌 Explicación:
-
-- `filetype:docx` → Busca archivos con extensión .docx.
-- `"confidential" OR "password" OR "internal use only"` → Filtra documentos con palabras clave que podrían indicar información sensible.
+## Ejercicio 4 - Buscar documentos Word (.docx) que contengan información sensible.
+Este comando busca documentos del tipo indicado con la palabra clave "confidential". Puede localizar documentos mal protegidos.
+filetype:docx "confidential"

